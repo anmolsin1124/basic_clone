@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zomato</title>
+    <title>Restaurants – Zomato</title>
     <link rel="stylesheet" href="style.css" />
     <style>
       /* Small styles for filter popup close button */
@@ -37,13 +37,50 @@
     </style>
   </head>
   <body>
+    <!-- ── Navbar ── -->
+    <nav class="navbar">
+      <div class="nav-brand">🍽️ Zomato</div>
+      <div class="nav-links">
+        <a href="home.html" class="nav-link">Home</a>
+        <a href="index.html" class="nav-link active">Restaurants</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </div>
+    </nav>
+
+    <!-- ── Quick-filter header ── -->
     <div id="head">
       <button id="Filters">Filters</button>
       <button id="Offers">Offers</button>
       <button id="Rating">Rating: 4.5+</button>
       <button id="Alcohol">Serves Alcohol</button>
       <button id="Open">Open Now</button>
+      <button id="ResetAll" title="Show all restaurants">✕ Reset</button>
     </div>
+
+    <!-- ── Search bar ── -->
+    <div class="search-bar-wrap">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by name, cuisine or location…"
+      />
+      <button id="searchBtn">Search</button>
+    </div>
+
+    <!-- ── Cuisine tabs ── -->
+    <div class="cuisine-tabs">
+      <button class="tab-btn active" data-cuisine="All">All</button>
+      <button class="tab-btn" data-cuisine="Indian">🍛 Indian</button>
+      <button class="tab-btn" data-cuisine="Chinese">🥟 Chinese</button>
+      <button class="tab-btn" data-cuisine="Japanese">🍱 Japanese</button>
+      <button class="tab-btn" data-cuisine="Mexican">🌮 Mexican</button>
+      <button class="tab-btn" data-cuisine="Italian">🍝 Italian</button>
+      <button class="tab-btn" data-cuisine="Thai">🍜 Thai</button>
+    </div>
+
+    <!-- ── Active filter badge + result count ── -->
+    <div class="active-filter-bar" id="activeFilterBar"></div>
+    <div id="resultCount"></div>
 
     <!-- Filter options popup -->
     <div id="filterPopup" class="hidden">
@@ -91,14 +128,31 @@
       <button id="closeFilter">Close</button>
     </div>
 
+    <!-- ── Restaurant detail modal ── -->
+    <div id="detailModal" class="modal-overlay" role="dialog" aria-modal="true">
+      <div class="modal-box">
+        <img id="modalImg" class="modal-img" src="" alt="Restaurant" />
+        <div class="modal-body">
+          <h2 id="modalName"></h2>
+          <div class="modal-meta" id="modalMeta"></div>
+          <div class="modal-details" id="modalDetails"></div>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn">Close ✕</button>
+      </div>
+    </div>
+
     <div id="root"></div>
+
+    <!-- ── Back to top ── -->
+    <button id="backToTop" title="Back to top">↑</button>
+
     <script src="app.js"></script>
     <script>
-      // Popup open/close wiring
+      // ── Popup open/close wiring ──────────────────────────────────────────
       (function () {
         const filtersBtn = document.getElementById("Filters");
         const filterPopup = document.getElementById("filterPopup");
-        const closeBtn = document.getElementById("closeFilter"); // existing Close button
+        const closeBtn = document.getElementById("closeFilter");
         const closeX = document.getElementById("closePopup");
 
         function openPopup() {
@@ -112,16 +166,341 @@
         if (closeBtn) closeBtn.addEventListener("click", closePopupFn);
         if (closeX) closeX.addEventListener("click", closePopupFn);
 
-        // close when clicking outside popup content
         filterPopup.addEventListener("click", (e) => {
           if (e.target === filterPopup) closePopupFn();
         });
-
-        // handle Escape key
         document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape") closePopupFn();
+          if (e.key === "Escape") {
+            closePopupFn();
+            closeModal();
+          }
         });
       })();
+
+      // ── Shared state ────────────────────────────────────────────────────
+      let activeCuisine = "All";
+      let activeSearch = "";
+      let activeSort = null; // sort applied via filter popup
+      let activeQuickFilter = null; // one of: "alcohol","rating","open","offers"
+      const CUISINES = [
+        "All",
+        "Indian",
+        "Chinese",
+        "Japanese",
+        "Mexican",
+        "Italian",
+        "Thai",
+      ];
+
+      function getFilteredList() {
+        let list = [...restaurants];
+
+        // Quick-filter buttons
+        if (activeQuickFilter === "alcohol") {
+          list = list.filter((r) => r.alcohol);
+        } else if (activeQuickFilter === "rating") {
+          list = list.filter((r) => r.rating > 4.5);
+        } else if (activeQuickFilter === "open") {
+          list = list.filter((r) => r.restaurant_open_time);
+        } else if (activeQuickFilter === "offers") {
+          list = list.filter((r) => r.offers > 9);
+        }
+
+        // Cuisine tab
+        if (activeCuisine !== "All") {
+          list = list.filter((r) => r.food_type === activeCuisine);
+        }
+
+        // Search
+        const q = activeSearch.toLowerCase();
+        if (q) {
+          list = list.filter(
+            (r) =>
+              r.name.toLowerCase().includes(q) ||
+              r.food_type.toLowerCase().includes(q) ||
+              r.location.toLowerCase().includes(q),
+          );
+        }
+
+        // Sort
+        if (activeSort === "rating") {
+          list.sort((a, b) => b.rating - a.rating);
+        } else if (activeSort === "highLow") {
+          list.sort((a, b) => b.price_for_two - a.price_for_two);
+        } else if (activeSort === "costLowHigh") {
+          list.sort((a, b) => a.price_for_two - b.price_for_two);
+        } else if (activeSort === "distance") {
+          list.sort(
+            (a, b) =>
+              parseFloat(a.distance_from_Customer_house) -
+              parseFloat(b.distance_from_Customer_house),
+          );
+        }
+
+        return list;
+      }
+
+      const QUICK_FILTER_LABELS = {
+        alcohol: "Serves Alcohol",
+        rating: "Rating 4.5+",
+        open: "Open Now",
+        offers: "Has Offers",
+      };
+      const SORT_LABELS = {
+        rating: "Sorted: Rating",
+        highLow: "Sorted: Price High→Low",
+        costLowHigh: "Sorted: Price Low→High",
+        distance: "Sorted: Distance",
+      };
+
+      function render() {
+        const list = getFilteredList();
+
+        // Active filter bar
+        const bar = document.getElementById("activeFilterBar");
+        const badges = [];
+        if (activeQuickFilter) {
+          badges.push(
+            `<span class="filter-badge">${QUICK_FILTER_LABELS[activeQuickFilter]}<button class="remove-badge" data-remove="quick">✕</button></span>`,
+          );
+        }
+        if (activeCuisine !== "All") {
+          badges.push(
+            `<span class="filter-badge">${activeCuisine}<button class="remove-badge" data-remove="cuisine">✕</button></span>`,
+          );
+        }
+        if (activeSearch) {
+          badges.push(
+            `<span class="filter-badge">Search: "${activeSearch}"<button class="remove-badge" data-remove="search">✕</button></span>`,
+          );
+        }
+        if (activeSort) {
+          badges.push(
+            `<span class="filter-badge">${SORT_LABELS[activeSort]}<button class="remove-badge" data-remove="sort">✕</button></span>`,
+          );
+        }
+        bar.innerHTML = badges.join(" ");
+
+        // Result count
+        document.getElementById("resultCount").textContent =
+          `${list.length} restaurant${list.length !== 1 ? "s" : ""} found`;
+
+        // Cards
+        const root = document.getElementById("root");
+        root.innerHTML = "";
+        if (list.length === 0) {
+          root.innerHTML =
+            '<div class="no-results"><span>🍽️</span>No restaurants match your filters.<br>Try removing a filter.</div>';
+          return;
+        }
+        getrestaurant(list);
+      }
+
+      // ── Badge remove ────────────────────────────────────────────────────
+      document
+        .getElementById("activeFilterBar")
+        .addEventListener("click", (e) => {
+          const btn = e.target.closest(".remove-badge");
+          if (!btn) return;
+          const type = btn.dataset.remove;
+          if (type === "quick") activeQuickFilter = null;
+          else if (type === "cuisine") {
+            activeCuisine = "All";
+            document
+              .querySelectorAll(".tab-btn")
+              .forEach((b) =>
+                b.classList.toggle("active", b.dataset.cuisine === "All"),
+              );
+          } else if (type === "search") {
+            activeSearch = "";
+            document.getElementById("searchInput").value = "";
+          } else if (type === "sort") {
+            activeSort = null;
+          }
+          render();
+        });
+
+      // ── Cuisine tabs ────────────────────────────────────────────────────
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          activeCuisine = btn.dataset.cuisine;
+          render();
+        });
+      });
+
+      // ── Search ──────────────────────────────────────────────────────────
+      document.getElementById("searchBtn").addEventListener("click", () => {
+        activeSearch = document.getElementById("searchInput").value.trim();
+        render();
+      });
+      document
+        .getElementById("searchInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            activeSearch = e.target.value.trim();
+            render();
+          }
+        });
+
+      // ── Quick-filter buttons ─────────────────────────────────────────────
+      document.getElementById("Alcohol").addEventListener("click", () => {
+        activeQuickFilter = activeQuickFilter === "alcohol" ? null : "alcohol";
+        render();
+      });
+      document.getElementById("Rating").addEventListener("click", () => {
+        activeQuickFilter = activeQuickFilter === "rating" ? null : "rating";
+        render();
+      });
+      document.getElementById("Open").addEventListener("click", () => {
+        activeQuickFilter = activeQuickFilter === "open" ? null : "open";
+        render();
+      });
+      document.getElementById("Offers").addEventListener("click", () => {
+        activeQuickFilter = activeQuickFilter === "offers" ? null : "offers";
+        render();
+      });
+      document.getElementById("ResetAll").addEventListener("click", () => {
+        activeQuickFilter = null;
+        activeCuisine = "All";
+        activeSearch = "";
+        activeSort = null;
+        document.getElementById("searchInput").value = "";
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.cuisine === "All"),
+          );
+        render();
+      });
+
+      // ── Sort popup apply ─────────────────────────────────────────────────
+      document.getElementById("applyFilter").addEventListener("click", () => {
+        const el = document.querySelector('input[name="filterOption"]:checked');
+        if (el) activeSort = el.value;
+        document.getElementById("filterPopup").classList.add("hidden");
+        render();
+      });
+
+      // ── Restaurant detail modal ──────────────────────────────────────────
+      function openModal(restaurant) {
+        document.getElementById("modalImg").src =
+          `images/${restaurant.image}.jpeg`;
+        document.getElementById("modalImg").alt = restaurant.name;
+        document.getElementById("modalName").textContent = restaurant.name;
+
+        const ratingInt = Math.round(restaurant.rating);
+        const stars = "★".repeat(ratingInt) + "☆".repeat(5 - ratingInt);
+        document.getElementById("modalMeta").innerHTML = `
+          <span class="modal-badge badge-rating">⭐ ${restaurant.rating}/5</span>
+          <span class="modal-badge badge-cuisine">${restaurant.food_type}</span>
+          ${restaurant.alcohol ? '<span class="modal-badge badge-alcohol">🍷 Alcohol</span>' : ""}
+        `;
+
+        const openH = restaurant.restaurant_open_time;
+        const closeH = restaurant.restaurant_close_time;
+        const openStr = `${String(openH).padStart(2, "0")}:00 – ${String(closeH).padStart(2, "0")}:00`;
+
+        document.getElementById("modalDetails").innerHTML = `
+          <div class="modal-detail-item">
+            <strong>Price for Two</strong>
+            <span>₹${restaurant.price_for_two}</span>
+          </div>
+          <div class="modal-detail-item">
+            <strong>Location</strong>
+            <span>${restaurant.location}</span>
+          </div>
+          <div class="modal-detail-item">
+            <strong>Distance</strong>
+            <span>${restaurant.distance_from_Customer_house} km</span>
+          </div>
+          <div class="modal-detail-item">
+            <strong>Offers</strong>
+            <span>${restaurant.offers > 0 ? restaurant.offers + "% off" : "No offers"}</span>
+          </div>
+          <div class="modal-detail-item">
+            <strong>Timing</strong>
+            <span>${openStr}</span>
+          </div>
+          <div class="modal-detail-item">
+            <strong>Rating</strong>
+            <span>${stars}</span>
+          </div>
+        `;
+
+        document.getElementById("detailModal").classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal() {
+        document.getElementById("detailModal").classList.remove("open");
+        document.body.style.overflow = "";
+      }
+
+      document
+        .getElementById("modalCloseBtn")
+        .addEventListener("click", closeModal);
+      document
+        .getElementById("detailModal")
+        .addEventListener("click", (e) => {
+          if (e.target === document.getElementById("detailModal"))
+            closeModal();
+        });
+
+      // Patch getrestaurant to attach click handler for modal
+      const _origGetRestaurant = getrestaurant;
+      // Override in-place after app.js loads: wrap each card
+      (function patchCards() {
+        const root = document.getElementById("root");
+        const observer = new MutationObserver(() => {
+          root.querySelectorAll(".card:not([data-modal-bound])").forEach((card) => {
+            card.dataset.modalBound = "1";
+            card.addEventListener("click", () => {
+              // find restaurant by rendered index position inside root
+              const cards = root.querySelectorAll(".card");
+              const idx = Array.from(cards).indexOf(card);
+              const list = getFilteredList();
+              if (list[idx]) openModal(list[idx]);
+            });
+          });
+        });
+        observer.observe(root, { childList: true, subtree: true });
+      })();
+
+      // ── Back to top ─────────────────────────────────────────────────────
+      const bttBtn = document.getElementById("backToTop");
+      window.addEventListener("scroll", () => {
+        bttBtn.classList.toggle("visible", window.scrollY > 300);
+      });
+      bttBtn.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      // ── URL query params (from home page search / cuisine links) ─────────
+      (function applyURLParams() {
+        const params = new URLSearchParams(window.location.search);
+        const cuisine = params.get("cuisine");
+        const search = params.get("search");
+        if (cuisine && CUISINES.includes(cuisine)) {
+          activeCuisine = cuisine;
+          document
+            .querySelectorAll(".tab-btn")
+            .forEach((b) =>
+              b.classList.toggle("active", b.dataset.cuisine === cuisine),
+            );
+        }
+        if (search) {
+          activeSearch = search;
+          document.getElementById("searchInput").value = search;
+        }
+      })();
+
+      // ── Initial render ───────────────────────────────────────────────────
+      render();
     </script>
   </body>
 </html>
+

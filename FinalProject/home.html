@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zomato – Discover Restaurants</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      /* ── Hero ── */
+      .hero {
+        background: linear-gradient(135deg, #cb202d 0%, #ff6b35 100%);
+        color: #fff;
+        padding: 80px 20px 60px;
+        text-align: center;
+      }
+      .hero h1 {
+        font-size: 2.8rem;
+        margin: 0 0 12px;
+      }
+      .hero p {
+        font-size: 1.2rem;
+        margin: 0 0 30px;
+        opacity: 0.9;
+      }
+      .hero-search {
+        display: flex;
+        max-width: 560px;
+        margin: 0 auto;
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
+      .hero-search input {
+        flex: 1;
+        padding: 14px 20px;
+        border: none;
+        font-size: 1rem;
+        outline: none;
+      }
+      .hero-search button {
+        padding: 14px 28px;
+        background: #fff;
+        color: #cb202d;
+        border: none;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        margin: 0;
+        border-radius: 0;
+      }
+      .hero-search button:hover {
+        background: #f5f5f5;
+      }
+
+      /* ── Stats bar ── */
+      .stats {
+        display: flex;
+        justify-content: center;
+        gap: 48px;
+        background: #fff;
+        padding: 28px 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+      }
+      .stat-item {
+        text-align: center;
+      }
+      .stat-item .num {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #cb202d;
+      }
+      .stat-item .label {
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      /* ── Section heading ── */
+      .section-title {
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 48px 0 24px;
+        color: #333;
+      }
+
+      /* ── Cuisine cards ── */
+      .cuisine-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        padding: 0 24px 48px;
+      }
+      .cuisine-card {
+        width: 160px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        padding: 28px 16px;
+        cursor: pointer;
+        transition: transform 0.25s, box-shadow 0.25s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+      .cuisine-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+      }
+      .cuisine-card .icon {
+        font-size: 2.4rem;
+        margin-bottom: 10px;
+      }
+      .cuisine-card .name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+      }
+
+      /* ── Features section ── */
+      .features {
+        background: #fff8f0;
+        padding: 48px 24px;
+      }
+      .feature-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 32px;
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .feature-item {
+        width: 200px;
+        text-align: center;
+      }
+      .feature-item .f-icon {
+        font-size: 2.6rem;
+        margin-bottom: 12px;
+      }
+      .feature-item h3 {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+      }
+      .feature-item p {
+        font-size: 0.88rem;
+        color: #666;
+        margin: 0;
+      }
+
+      /* ── CTA banner ── */
+      .cta-banner {
+        background: linear-gradient(135deg, #1a1a2e 0%, #cb202d 100%);
+        color: #fff;
+        text-align: center;
+        padding: 56px 24px;
+      }
+      .cta-banner h2 {
+        font-size: 2rem;
+        margin: 0 0 16px;
+      }
+      .cta-banner p {
+        font-size: 1.05rem;
+        opacity: 0.85;
+        margin: 0 0 28px;
+      }
+      .cta-banner a {
+        display: inline-block;
+        background: #fff;
+        color: #cb202d;
+        padding: 14px 40px;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .cta-banner a:hover {
+        background: #ffe0e0;
+      }
+
+      /* ── Footer ── */
+      footer {
+        background: #222;
+        color: #aaa;
+        text-align: center;
+        padding: 20px;
+        font-size: 0.88rem;
+      }
+      footer a {
+        color: #ff6b6b;
+        text-decoration: none;
+        margin: 0 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── Navbar ── -->
+    <nav class="navbar">
+      <div class="nav-brand">🍽️ Zomato</div>
+      <div class="nav-links">
+        <a href="home.html" class="nav-link active">Home</a>
+        <a href="index.html" class="nav-link">Restaurants</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </div>
+    </nav>
+
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <h1>Discover the Best Food Near You</h1>
+      <p>Order from top-rated restaurants and get it delivered fast 🚀</p>
+      <div class="hero-search">
+        <input
+          type="text"
+          id="heroSearchInput"
+          placeholder="Search by restaurant, cuisine or location…"
+        />
+        <button id="heroSearchBtn">Search</button>
+      </div>
+    </section>
+
+    <!-- ── Stats ── -->
+    <div class="stats">
+      <div class="stat-item">
+        <div class="num">100+</div>
+        <div class="label">Restaurants</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">6</div>
+        <div class="label">Cuisines</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">10km</div>
+        <div class="label">Max Delivery Range</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">30 min</div>
+        <div class="label">Avg Delivery</div>
+      </div>
+    </div>
+
+    <!-- ── Cuisines ── -->
+    <h2 class="section-title">Browse by Cuisine</h2>
+    <div class="cuisine-grid">
+      <a href="index.html?cuisine=Indian" class="cuisine-card">
+        <div class="icon">🍛</div>
+        <div class="name">Indian</div>
+      </a>
+      <a href="index.html?cuisine=Chinese" class="cuisine-card">
+        <div class="icon">🥟</div>
+        <div class="name">Chinese</div>
+      </a>
+      <a href="index.html?cuisine=Japanese" class="cuisine-card">
+        <div class="icon">🍱</div>
+        <div class="name">Japanese</div>
+      </a>
+      <a href="index.html?cuisine=Mexican" class="cuisine-card">
+        <div class="icon">🌮</div>
+        <div class="name">Mexican</div>
+      </a>
+      <a href="index.html?cuisine=Italian" class="cuisine-card">
+        <div class="icon">🍝</div>
+        <div class="name">Italian</div>
+      </a>
+      <a href="index.html?cuisine=Thai" class="cuisine-card">
+        <div class="icon">🍜</div>
+        <div class="name">Thai</div>
+      </a>
+    </div>
+
+    <!-- ── Why Us ── -->
+    <section class="features">
+      <h2 class="section-title" style="margin-top: 0">Why Choose Zomato?</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="f-icon">⚡</div>
+          <h3>Fast Delivery</h3>
+          <p>Get your food delivered in under 30 minutes.</p>
+        </div>
+        <div class="feature-item">
+          <div class="f-icon">🌟</div>
+          <h3>Top Rated</h3>
+          <p>Browse restaurants with 4.5+ ratings.</p>
+        </div>
+        <div class="feature-item">
+          <div class="f-icon">💸</div>
+          <h3>Best Offers</h3>
+          <p>Exclusive deals up to 30% off daily.</p>
+        </div>
+        <div class="feature-item">
+          <div class="f-icon">🔒</div>
+          <h3>Safe & Hygienic</h3>
+          <p>All restaurants follow safety standards.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="cta-banner">
+      <h2>Ready to Order?</h2>
+      <p>Browse all restaurants and find your next favourite meal.</p>
+      <a href="index.html">Explore Restaurants →</a>
+    </section>
+
+    <!-- ── Footer ── -->
+    <footer>
+      <p>
+        &copy; 2025 Zomato Clone &nbsp;|&nbsp;
+        <a href="home.html">Home</a>
+        <a href="index.html">Restaurants</a>
+        <a href="contact.html">Contact</a>
+      </p>
+    </footer>
+
+    <script>
+      // Hero search → redirect to listing page with query
+      document.getElementById("heroSearchBtn").addEventListener("click", () => {
+        const q = document
+          .getElementById("heroSearchInput")
+          .value.trim();
+        if (q) {
+          window.location.href = `index.html?search=${encodeURIComponent(q)}`;
+        } else {
+          window.location.href = "index.html";
+        }
+      });
+      document
+        .getElementById("heroSearchInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") document.getElementById("heroSearchBtn").click();
+        });
+    </script>
+  </body>
+</html>
